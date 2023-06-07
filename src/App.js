@@ -6,13 +6,16 @@ import AuthDetails from './components/auth/AuthDetails';
 function App() {
   return (
     <div className="App">
-      <h1>Welcome to SocialBirbs!</h1>
-    <br></br>
-     <SignIn />
-    <br></br>
-     <SignUp />
-    <br></br>
-     <AuthDetails />
+
+      <div className='wrapper'>
+        <h1>Welcome to SocialBirbs!</h1>
+        <br></br>
+        <SignIn />
+        <br></br>
+        <SignUp />
+        <br></br>
+        <AuthDetails />
+      </div>
     </div>
   );
 }
