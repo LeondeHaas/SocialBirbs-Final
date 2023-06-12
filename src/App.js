@@ -9,7 +9,6 @@ import { BrowserRouter as Router, Route, Redirect } from 'react-router-dom';
 function App() {
   return (
     <div className="App">
-
       <div className='wrapper'>
         <h1>Welcome to SocialBirbs!</h1>
         <br></br>
@@ -23,5 +22,16 @@ function App() {
     </div>
   );
 }
+
+// const [getTaskList, getTaskList] = useState([]);
+// cosnt jobCollectionRef = collection(db, "tasks");
+
+// useEffect(() => {
+// const getTasks = async () => {
+// const data = await getDocs(jobCollectionRef);
+// setTaskList(data.docs.map((doc) => ({...doc.data(), id: doc.id})));
+// }
+// getTasks();
+// },[])
 
 export default App;
