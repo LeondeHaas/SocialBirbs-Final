@@ -94,6 +94,8 @@ button {
   background-color: #243E36;
   font-family: 'Ubuntu', sans-serif;
   cursor: pointer;
+  width: 100%;
+    margin-bottom: 10px;
 }
 
 button:hover {

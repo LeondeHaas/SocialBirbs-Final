@@ -9,11 +9,13 @@ import {
   deleteDoc,
   doc
 } from 'firebase/firestore';
-import { db } from '../../config/firebase';
+import { db, storage } from '../../config/firebase';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 
 const CreatePost = ({ authUser }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [image, setImage] = useState(null);
   const [posts, setPosts] = useState([]);
 
   useEffect(() => {
@@ -35,35 +37,56 @@ const CreatePost = ({ authUser }) => {
   };
 
   const handlePostSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    try {
-      const docRef = await addDoc(collection(db, 'posts'), {
-        title,
-        description,
-        userId: authUser.uid,
-        email: authUser.email,
-        timestamp: serverTimestamp()
-      });
+  try {
+    const storageRef = ref(storage, `images/${image.name}`);
+    const uploadTask = uploadBytesResumable(storageRef, image);
 
-      const newPostId = docRef.id;
-      const newPost = {
-        id: newPostId,
-        title,
-        description,
-        email: authUser.email,
-        userId: authUser.uid // Add userId to new post
-      };
-      setPosts((prevPosts) => [...prevPosts, newPost]);
+    uploadTask.on(
+      'state_changed',
+      (snapshot) => {
+        // Upload progress
+      },
+      (error) => {
+        console.error('Error uploading image: ', error);
+      },
+      async () => {
+        // Upload completed successfully
+        try {
+          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+          const docRef = await addDoc(collection(db, 'posts'), {
+            title,
+            description,
+            image: downloadURL,
+            userId: authUser.uid,
+            email: authUser.email,
+            timestamp: serverTimestamp()
+          });
 
-      setTitle('');
-      setDescription('');
+          const newPostId = docRef.id;
+          const newPost = {
+            id: newPostId,
+            title,
+            description,
+            image: downloadURL,
+            email: authUser.email,
+            userId: authUser.uid
+          };
+          setPosts((prevPosts) => [...prevPosts, newPost]);
 
-      await fetchPosts(); // Fetch the updated posts
-    } catch (error) {
-      console.error('Error adding post: ', error);
-    }
-  };
+          setTitle('');
+          setDescription('');
+          setImage(null);
+        } catch (error) {
+          console.error('Error adding post: ', error);
+        }
+      }
+    );
+  } catch (error) {
+    console.error('Error uploading image: ', error);
+  }
+};
 
   const removePost = async (postId) => {
     try {
@@ -79,6 +102,11 @@ const CreatePost = ({ authUser }) => {
     }
   };
 
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    setImage(file);
+  };
+
   return (
     <div>
       <form onSubmit={handlePostSubmit}>
@@ -90,19 +118,24 @@ const CreatePost = ({ authUser }) => {
           onChange={(e) => setTitle(e.target.value)}
         />
         <input
-          className='desc'
+          className="desc"
           type="text"
           placeholder="Enter post description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
-        <button className='submit' type="submit">
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleImageUpload}
+        />
+        <button className="submit" type="submit">
           Submit post
         </button>
       </form>
 
       {posts.length > 0 && (
-        <div className='posts-wrapper-wrapper'>
+        <div className="posts-wrapper-wrapper">
           <h1>Posts:</h1>
           {posts.map((post) => (
             <div
@@ -110,7 +143,7 @@ const CreatePost = ({ authUser }) => {
               key={post.id}
             >
               <img
-                className='pfp'
+                className="pfp"
                 src="https://cdn-icons-png.flaticon.com/128/2571/2571562.png"
                 alt=""
               />
@@ -118,8 +151,9 @@ const CreatePost = ({ authUser }) => {
               <p>Email: {post.email}</p>
               <p>Title: {post.title}</p>
               <p>Description: {post.description}</p>
+              {post.image && <img src={post.image} alt="Post Image" />} {/* Display the image if it exists */}
               {post.userId === authUser.uid && (
-                <button className='remove-post' onClick={() => removePost(post.id)}>
+                <button className="remove-post" onClick={() => removePost(post.id)}>
                   Remove post
                 </button>
               )}
