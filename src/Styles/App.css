@@ -6,6 +6,11 @@
   padding: 0;
 }
 
+.posts-wrapper.user-post {
+  background-color: #1ac08b6b;
+  border: 3px solid greenyellow;
+}
+
 .App {
   justify-content: center;
   display: flex;

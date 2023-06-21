@@ -10,6 +10,7 @@ const AuthDetails = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [posts, setPosts] = useState([]);
   const [filteredPosts, setFilteredPosts] = useState([]);
+  const [hideUserPosts, setHideUserPosts] = useState(false); // State to hide user's posts
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -62,6 +63,10 @@ const AuthDetails = () => {
     setFilteredPosts(filtered);
   }, [searchTerm, posts]);
 
+  const toggleHideUserPosts = () => {
+    setHideUserPosts(!hideUserPosts);
+  };
+
   const userSignOut = () => {
     signOut(auth)
       .then(() => {
@@ -75,6 +80,9 @@ const AuthDetails = () => {
       {authUser ? (
         <>
           <p>{`You are signed in as ${authUser.email}`}</p>
+          <button className="hide-posts" onClick={toggleHideUserPosts}>
+            {hideUserPosts ? 'Show My Posts' : 'Hide My Posts'}
+          </button>
           <button className="sign-out" onClick={userSignOut}>
             Sign Out
           </button>
@@ -99,7 +107,7 @@ const AuthDetails = () => {
               ))}
             </>
           ) : (
-            <CreatePost authUser={authUser} />
+            <CreatePost authUser={authUser} hideUserPosts={hideUserPosts} /> // Pass hideUserPosts prop
           )}
         </>
       ) : (
