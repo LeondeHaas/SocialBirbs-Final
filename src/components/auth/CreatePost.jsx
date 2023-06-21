@@ -14,10 +14,10 @@ const CreatePost = () => {
     const listen = onAuthStateChanged(auth, (user) => {
       if (user) {
         setAuthUser(user);
-        fetchPosts(user.uid); // Fetch posts for the current user
+        fetchPosts(user.uid);
       } else {
         setAuthUser(null);
-        setPosts([]); // Clear posts when the user logs out
+        setPosts([]);
       }
     });
 
@@ -28,7 +28,6 @@ const CreatePost = () => {
 
   const fetchPosts = async (userId) => {
     try {
-      // Fetch posts associated with the user from the database
       const q = query(collection(db, 'posts'), where('userId', '==', userId));
       const querySnapshot = await getDocs(q);
       const fetchedPosts = [];
@@ -46,23 +45,22 @@ const CreatePost = () => {
     e.preventDefault();
 
     try {
-      // Create a new post document in the database with timestamp
       const docRef = await addDoc(collection(db, 'posts'), {
         title,
         description,
-        userId: authUser.uid, // Associate the post with the user ID
-        timestamp: serverTimestamp() // Add the current timestamp
+        userId: authUser.uid,
+        email: authUser.email,
+        timestamp: serverTimestamp()
       });
 
       const newPostId = docRef.id;
-      const newPost = { id: newPostId, title, description };
+      const newPost = { id: newPostId, title, description, email: authUser.email };
       setPosts((prevPosts) => [...prevPosts, newPost]);
 
-      // Clear the form inputs after submitting
       setTitle('');
       setDescription('');
 
-      window.location.reload(); // Refresh the page
+      window.location.reload();
     } catch (error) {
       console.error('Error adding post: ', error);
     }
@@ -70,10 +68,8 @@ const CreatePost = () => {
 
   const removePost = async (postId) => {
     try {
-      // Remove the post from the database
       await deleteDoc(doc(db, 'posts', postId));
 
-      // Update the posts state by removing the deleted post
       setPosts((prevPosts) => prevPosts.filter((post) => post.id !== postId));
     } catch (error) {
       console.error('Error removing post: ', error);
@@ -94,10 +90,10 @@ const CreatePost = () => {
         <h1>Create a New Post</h1>
         <input type="text" placeholder="Enter post title" value={title} onChange={(e) => setTitle(e.target.value)}
         />
-        <input type="text" placeholder="Enter post description" value={description} onChange={(e) =>
+        <input className='desc' type="text" placeholder="Enter post description" value={description} onChange={(e) =>
           setDescription(e.target.value)}
         />
-        <button className='submit' type="submit">Submit</button>
+        <button className='submit' type="submit">Submit post</button>
       </form>
 
       {posts.length > 0 && (
@@ -118,11 +114,11 @@ const CreatePost = () => {
         </div>
       )}
 
-      {authUser && (
+      {/* {authUser && (
         <button className="sign-out" onClick={userSignOut}>
           Sign Out
         </button>
-      )}
+      )} */}
     </div>
   );
 };

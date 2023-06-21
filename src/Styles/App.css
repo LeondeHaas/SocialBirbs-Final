@@ -39,6 +39,22 @@ input {
   border: 0;
   font-family: 'Ubuntu', sans-serif;
   background-color: #F1F7ED;
+  width: 100%;
+}
+
+.test {
+  background-color: #243e366b;
+  padding: 20px;
+  border-radius: 15px;
+}
+
+.sign-out:hover {
+  background-color: red;
+  transition: 75ms;
+}
+
+.desc {
+  height: 100px;
 }
 
 .sign-in-container {
@@ -49,6 +65,7 @@ input {
   height: 50px;
   width: 100%;
   background-color: #243E36;
+  transition: 75ms;
 }
 
 .google-sign-in {
@@ -136,3 +153,10 @@ p {
 hr {
   border: 0;
 }
+
+/* 
+@media screen and (min-height: 2000px) {
+  .App {
+    height: auto;
+  }
+} */
