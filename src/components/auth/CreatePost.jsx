@@ -16,10 +16,12 @@ const CreatePost = ({ authUser }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [image, setImage] = useState(null);
+  const [imageUrl, setImageUrl] = useState('');
   const [posts, setPosts] = useState([]);
+  const [hidePosts, setHidePosts] = useState(false);
 
   useEffect(() => {
-    fetchPosts(); // Fetch posts when the component mounts
+    fetchPosts();
   }, []);
 
   const fetchPosts = async () => {
@@ -37,56 +39,72 @@ const CreatePost = ({ authUser }) => {
   };
 
   const handlePostSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  try {
-    const storageRef = ref(storage, `images/${image.name}`);
-    const uploadTask = uploadBytesResumable(storageRef, image);
+    try {
+      let downloadURL = imageUrl || null;
 
-    uploadTask.on(
-      'state_changed',
-      (snapshot) => {
-        // Upload progress
-      },
-      (error) => {
-        console.error('Error uploading image: ', error);
-      },
-      async () => {
-        // Upload completed successfully
-        try {
-          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-          const docRef = await addDoc(collection(db, 'posts'), {
-            title,
-            description,
-            image: downloadURL,
-            userId: authUser.uid,
-            email: authUser.email,
-            timestamp: serverTimestamp()
-          });
+      if (image) {
+        const storageRef = ref(storage, `images/${image.name}`);
+        const uploadTask = uploadBytesResumable(storageRef, image);
 
-          const newPostId = docRef.id;
-          const newPost = {
-            id: newPostId,
-            title,
-            description,
-            image: downloadURL,
-            email: authUser.email,
-            userId: authUser.uid
-          };
-          setPosts((prevPosts) => [...prevPosts, newPost]);
-
-          setTitle('');
-          setDescription('');
-          setImage(null);
-        } catch (error) {
-          console.error('Error adding post: ', error);
-        }
+        uploadTask.on(
+          'state_changed',
+          (snapshot) => {
+            // Upload progress
+          },
+          (error) => {
+            console.error('Error uploading image: ', error);
+          },
+          async () => {
+            try {
+              downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+              savePost(downloadURL);
+            } catch (error) {
+              console.error('Error adding post: ', error);
+            }
+          }
+        );
+      } else {
+        savePost(downloadURL);
       }
-    );
-  } catch (error) {
-    console.error('Error uploading image: ', error);
-  }
-};
+    } catch (error) {
+      console.error('Error uploading image: ', error);
+    }
+  };
+
+  const savePost = async (imageURL) => {
+    try {
+      const docRef = await addDoc(collection(db, 'posts'), {
+        title,
+        description,
+        image: imageURL,
+        userId: authUser.uid,
+        email: authUser.email,
+        timestamp: serverTimestamp()
+      });
+
+      const newPostId = docRef.id;
+      const newPost = {
+        id: newPostId,
+        title,
+        description,
+        image: imageURL,
+        email: authUser.email,
+        userId: authUser.uid
+      };
+
+      setPosts((prevPosts) => [...prevPosts, newPost]);
+      setTitle('');
+      setDescription('');
+      setImage(null);
+      setImageUrl('');
+
+      window.location.reload();
+    } catch (error) {
+      console.error('Error adding post: ', error);
+    }
+  };
 
   const removePost = async (postId) => {
     try {
@@ -105,11 +123,21 @@ const CreatePost = ({ authUser }) => {
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     setImage(file);
+    setImageUrl('');
+  };
+
+  const handleImageUrlChange = (e) => {
+    setImageUrl(e.target.value);
+    setImage(null);
+  };
+
+  const togglePostVisibility = () => {
+    setHidePosts(!hidePosts);
   };
 
   return (
     <div>
-      <form onSubmit={handlePostSubmit}>
+      <form className='create-form' onSubmit={handlePostSubmit}>
         <h1>Create a New Post</h1>
         <input
           type="text"
@@ -124,11 +152,22 @@ const CreatePost = ({ authUser }) => {
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handleImageUpload}
-        />
+        <div>
+          <input
+            className="img"
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+          />
+        </div>
+        <div>
+          <input
+            type="text"
+            placeholder="Enter image URL"
+            value={imageUrl}
+            onChange={handleImageUrlChange}
+          />
+        </div>
         <button className="submit" type="submit">
           Submit post
         </button>
@@ -151,13 +190,21 @@ const CreatePost = ({ authUser }) => {
               <p>Email: {post.email}</p>
               <p>Title: {post.title}</p>
               <p>Description: {post.description}</p>
-              {post.image && <img src={post.image} alt="Post Image" />} {/* Display the image if it exists */}
+              {post.image && <img src={post.image} alt="Post Image" />}
               {post.userId === authUser.uid && (
                 <button className="remove-post" onClick={() => removePost(post.id)}>
                   Remove post
                 </button>
               )}
-              <hr />
+              {hidePosts ? (
+                <button className="show-post" onClick={togglePostVisibility}>
+                  Show post
+                </button>
+              ) : (
+                <div>
+                  <hr />
+                </div>
+              )}
             </div>
           ))}
         </div>

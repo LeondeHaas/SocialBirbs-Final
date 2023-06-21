@@ -1,7 +1,9 @@
+// AuthDetails.js
+
 import React, { useState, useEffect } from 'react';
 import { auth } from '../../config/firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { collection, query, getDocs } from 'firebase/firestore'; // Add the necessary imports
+import { collection, query, getDocs } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import CreatePost from './CreatePost';
 
@@ -10,13 +12,12 @@ const AuthDetails = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [posts, setPosts] = useState([]);
   const [filteredPosts, setFilteredPosts] = useState([]);
-  const [hideUserPosts, setHideUserPosts] = useState(false); // State to hide user's posts
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         setAuthUser(user);
-        fetchPosts(); // Fetch posts when the authUser state changes
+        fetchPosts();
       } else {
         setAuthUser(null);
         setPosts([]);
@@ -31,7 +32,6 @@ const AuthDetails = () => {
 
   const fetchPosts = async () => {
     try {
-      // Fetch all posts from the database
       const querySnapshot = await getDocs(collection(db, 'posts'));
       const fetchedPosts = [];
       querySnapshot.forEach((doc) => {
@@ -63,10 +63,6 @@ const AuthDetails = () => {
     setFilteredPosts(filtered);
   }, [searchTerm, posts]);
 
-  const toggleHideUserPosts = () => {
-    setHideUserPosts(!hideUserPosts);
-  };
-
   const userSignOut = () => {
     signOut(auth)
       .then(() => {
@@ -76,19 +72,16 @@ const AuthDetails = () => {
   };
 
   return (
-    <div className='test'>
+    <div className="test">
       {authUser ? (
         <>
-          <p>{`You are signed in as ${authUser.email}`}</p>
-          <button className="hide-posts" onClick={toggleHideUserPosts}>
-            {hideUserPosts ? 'Show My Posts' : 'Hide My Posts'}
-          </button>
+          <p className='signed-in'>{`You are signed in as ${authUser.email}`}</p>
           <button className="sign-out" onClick={userSignOut}>
             Sign Out
           </button>
           <br />
           <input
-            className='search'
+            className="search"
             type="text"
             placeholder="Search posts"
             value={searchTerm}
@@ -107,7 +100,7 @@ const AuthDetails = () => {
               ))}
             </>
           ) : (
-            <CreatePost authUser={authUser} hideUserPosts={hideUserPosts} /> // Pass hideUserPosts prop
+            <CreatePost authUser={authUser} />
           )}
         </>
       ) : (
