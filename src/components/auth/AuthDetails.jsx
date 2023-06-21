@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { auth } from '../../config/firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { collection, query, where, getDocs } from 'firebase/firestore'; // Add the necessary imports
+import { collection, query, getDocs } from 'firebase/firestore'; // Add the necessary imports
 import { db } from '../../config/firebase';
 import CreatePost from './CreatePost';
 
@@ -12,28 +12,26 @@ const AuthDetails = () => {
   const [filteredPosts, setFilteredPosts] = useState([]);
 
   useEffect(() => {
-    const listen = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         setAuthUser(user);
+        fetchPosts(); // Fetch posts when the authUser state changes
       } else {
         setAuthUser(null);
+        setPosts([]);
+        setFilteredPosts([]);
       }
     });
 
     return () => {
-      listen();
+      unsubscribe();
     };
   }, []);
 
-  useEffect(() => {
-    fetchPosts(authUser?.uid); // Fetch posts when the authUser state changes
-  }, [authUser]);
-
-  const fetchPosts = async (userId) => {
+  const fetchPosts = async () => {
     try {
-      // Fetch posts associated with the user from the database
-      const q = query(collection(db, 'posts'), where('userId', '==', userId));
-      const querySnapshot = await getDocs(q);
+      // Fetch all posts from the database
+      const querySnapshot = await getDocs(collection(db, 'posts'));
       const fetchedPosts = [];
       querySnapshot.forEach((doc) => {
         const postData = { id: doc.id, ...doc.data() };
@@ -67,7 +65,7 @@ const AuthDetails = () => {
   const userSignOut = () => {
     signOut(auth)
       .then(() => {
-        console.log('signed out successfully');
+        console.log('Signed out successfully');
       })
       .catch((error) => console.log(error));
   };
@@ -77,13 +75,12 @@ const AuthDetails = () => {
       {authUser ? (
         <>
           <p>{`You are signed in as ${authUser.email}`}</p>
-          {authUser && (
-            <button className="sign-out" onClick={userSignOut}>
-              Sign Out
-            </button>
-          )}
+          <button className="sign-out" onClick={userSignOut}>
+            Sign Out
+          </button>
           <br />
-          <input className='search'
+          <input
+            className='search'
             type="text"
             placeholder="Search posts"
             value={searchTerm}
@@ -102,12 +99,8 @@ const AuthDetails = () => {
               ))}
             </>
           ) : (
-            <CreatePost />
+            <CreatePost authUser={authUser} />
           )}
-          <br />
-          {/* <button className="sign-out" onClick={userSignOut}>
-            Sign Out
-          </button> */}
         </>
       ) : (
         <p>You are currently signed out.</p>
