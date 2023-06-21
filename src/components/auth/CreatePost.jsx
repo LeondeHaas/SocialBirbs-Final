@@ -1,11 +1,46 @@
-import React, { useState } from 'react';
-import { collection, addDoc } from 'firebase/firestore';
+import React, { useState, useEffect } from 'react';
+import { collection, addDoc, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../../config/firebase';
+import { auth } from '../../config/firebase';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
 
 const CreatePost = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [posts, setPosts] = useState([]); // New state to hold multiple posts
+  const [posts, setPosts] = useState([]);
+  const [authUser, setAuthUser] = useState(null);
+
+  useEffect(() => {
+    const listen = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setAuthUser(user);
+        fetchPosts(user.uid); // Fetch posts for the current user
+      } else {
+        setAuthUser(null);
+        setPosts([]); // Clear posts when the user logs out
+      }
+    });
+
+    return () => {
+      listen();
+    };
+  }, []);
+
+  const fetchPosts = async (userId) => {
+    try {
+      // Fetch posts associated with the user from the database
+      const q = query(collection(db, 'posts'), where('userId', '==', userId));
+      const querySnapshot = await getDocs(q);
+      const fetchedPosts = [];
+      querySnapshot.forEach((doc) => {
+        const postData = { id: doc.id, ...doc.data() };
+        fetchedPosts.push(postData);
+      });
+      setPosts(fetchedPosts);
+    } catch (error) {
+      console.error('Error fetching posts: ', error);
+    }
+  };
 
   const handlePostSubmit = async (e) => {
     e.preventDefault();
@@ -15,11 +50,12 @@ const CreatePost = () => {
       const docRef = await addDoc(collection(db, 'posts'), {
         title,
         description,
+        userId: authUser.uid, // Associate the post with the user ID
       });
 
       const newPostId = docRef.id;
       const newPost = { id: newPostId, title, description };
-      setPosts((prevPosts) => [...prevPosts, newPost]); // Add new post to the array
+      setPosts((prevPosts) => [...prevPosts, newPost]);
 
       // Clear the form inputs after submitting
       setTitle('');
@@ -29,10 +65,18 @@ const CreatePost = () => {
     }
   };
 
+  const userSignOut = () => {
+    signOut(auth)
+      .then(() => {
+        console.log('Signed out successfully');
+      })
+      .catch((error) => console.log(error));
+  };
+
   return (
     <div>
       <form onSubmit={handlePostSubmit}>
-        <h2>Create a New Post</h2>
+        <h1>Create a New Post</h1>
         <input
           type="text"
           placeholder="Enter post title"
@@ -50,10 +94,10 @@ const CreatePost = () => {
 
       {/* Display the posts */}
       {posts.length > 0 && (
-        <div>
-          <h3>Posts:</h3>
+        <div className='posts-wrapper-wrapper'>
+          <h1>Posts:</h1>
           {posts.map((post) => (
-            <div key={post.id}>
+            <div className='posts-wrapper' key={post.id}>
               <p>ID: {post.id}</p>
               <p>Title: {post.title}</p>
               <p>Description: {post.description}</p>
@@ -61,6 +105,13 @@ const CreatePost = () => {
             </div>
           ))}
         </div>
+      )}
+
+      {/* Show sign out button if user is authenticated */}
+      {authUser && (
+        <button className="sign-out" onClick={userSignOut}>
+          Sign Out
+        </button>
       )}
     </div>
   );
