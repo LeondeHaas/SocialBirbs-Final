@@ -175,7 +175,6 @@ const CreatePost = ({ authUser }) => {
 
       {posts.length > 0 && (
         <div className="posts-wrapper-wrapper">
-          <h1>Posts:</h1>
           {posts.map((post) => (
             <div
               className={`posts-wrapper ${post.userId === authUser.uid ? 'user-post' : ''}`}
@@ -188,9 +187,9 @@ const CreatePost = ({ authUser }) => {
               />
               <p>Posted at: {post.timestamp && post.timestamp.toDate().toLocaleString()}</p>
               <p>Email: {post.email}</p>
+              {post.image && <img src={post.image} alt="Post Image" />}
               <p>Title: {post.title}</p>
               <p>Description: {post.description}</p>
-              {post.image && <img src={post.image} alt="Post Image" />}
               {post.userId === authUser.uid && (
                 <button className="remove-post" onClick={() => removePost(post.id)}>
                   Remove post

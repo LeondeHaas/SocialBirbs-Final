@@ -7,8 +7,8 @@
 }
 
 .posts-wrapper.user-post {
-  background-color: #1ac08b6b;
-  border: 3px solid greenyellow;
+  /* background-color: #1ac08b6b; */
+  outline: 1.5px solid greenyellow;
 }
 
 .App {
@@ -20,16 +20,23 @@
   align-items: center;
   width: 100%;
   height: auto;
-  background-image: url(/src/Images/pexels-sunny-2355546.jpg);
+  background-image: url(../../public/Images/pexels-sunny-2355546.jpg);
   background-repeat: no-repeat;
   background-size: cover;
+  background-attachment: fixed;
+}
+
+.posts-wrapper-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-evenly;
 }
 
 .wrapper {
-  width: auto;
   height: auto;
+  width: 600px;
   backdrop-filter: blur(20px);
-  padding: 40px;
+  /* padding: 40px; */
   box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
   border-radius: 15px;
 }
@@ -48,7 +55,7 @@ input {
 }
 
 img {
-  width: 400px;
+  width: 325px;
   height: auto;
   margin-bottom: 10px;
   box-shadow: rgba(0, 0, 0, 0.2) 0px 60px 40px -7px;
@@ -65,6 +72,16 @@ img .test {
   background-color: #243e366b;
   padding: 25px;
   border-radius: 25px;
+  margin: 20px;
+}
+
+.close-tooltip:hover {
+  background-color: red;
+  transition: 75ms;
+}
+
+.tool-tip {
+  transition: 75ms;
 }
 
 .signed-in {
@@ -74,7 +91,7 @@ img .test {
 }
 
 .account-wrapper {
-  background-color: #00ffb346;
+  /* background-color: #00ffb346; */
   margin-bottom: 10px;
   border-radius: 15px;
   padding: 40px;
@@ -87,10 +104,6 @@ img .test {
 
 .desc {
   height: 100px;
-}
-
-.sign-in-container {
-  width: 650px;
 }
 
 .sign-out {
@@ -161,6 +174,18 @@ button:hover {
   margin-top: 20px;
   margin-bottom: 20px;
   padding: 20px;
+  margin: 10px;
+  flex-direction: column;
+  /* display: flex; */
+  justify-content: center;
+  align-items: center;
+  width: 525px;
+  transition: 75ms;
+}
+
+.posts-wrapper:hover {
+  transform: scale(0.95);
+  transition: 75ms;
 }
 
 h1 {
@@ -172,12 +197,6 @@ h1 {
   margin-bottom: 10px;
 }
 
-/* .post-wrapper {
-  background-color: #345f52;
-  border-radius: 4px;
-  margin-top: 30px;
-  margin-bottom: 30px;
-} */
 
 p {
   margin-top: 10px;
